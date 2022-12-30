@@ -330,12 +330,14 @@ void Matrix::zeroCol(unsigned int pivotRow, unsigned int pivotCol, unsigned int 
 }
 
 void Matrix::gaussElim() {
+    std::cout << "ELIMINACION GAUSSIANA" << std::endl;
     if (m_colSize >= m_rowSize + 1) {
         for (int i = 0; i < m_colSize - 1; i++) {
             sort(i, i);
             if (m_matrix[i][i] != 1)
                 divRow(i, m_matrix[i][i]);
             zeroCol(i, i, i, true);
+            print();
         }
     }
 }
@@ -353,62 +355,24 @@ void Matrix::sort(unsigned int row, unsigned int col) {
     }
 }
 
-Matrix Matrix::getMatrixU(Matrix &A) {
-    Matrix U(A);
-    if (U.m_rowSize != U.m_colSize) {
-        cout << "Error: La matriz debe ser cuadrada." << endl;
-        return U;
-    }
-    for (int i = 0; i < m_colSize - 1; i++)
-        U.zeroCol(i, i, i, true);
-    return U;
-}
-
-Matrix Matrix::getMatrixL(Matrix &A, Matrix &U) {
-    Matrix L(A.m_rowSize, A.m_colSize, 0);
-    if (A.m_rowSize != U.m_rowSize || A.m_colSize != U.m_colSize) {
-        cout << "Error: Las matrices deben ser del mismo tamaño";
-        return L;
-    }
-    if (L.m_rowSize != L.m_colSize) {
-        cout << "Error: La matriz debe ser cuadrada." << endl;
-        return L;
-    }
-    // La diagonal principal de la matriz L equivale a la matriz identidad.
-    for (int i = 0; i < L.m_colSize; i++) {
-        L.m_matrix[i][i] = 1;
-    }
-    int row = 0, col = 0;
-    while (col < L.m_rowSize - 1) {
-        double divisor = U.m_matrix[row][col];
-        for (int i = row + 1; i < L.m_rowSize; i++) {
-            double quotient = A.m_matrix[i][col];
-            L.m_matrix[i][col] = quotient / divisor;
-        }
-        row++;
-        col++;
-    }
-    return L;
-}
-
-Matrix Matrix::gaussSeidelIter(Matrix &A) {
+Matrix Matrix::gaussSeidelIter(Matrix &AB) {
     // Inicializar una matriz con la iteración inicial de resultados.
-    Matrix result(1, A.m_rowSize, 0);
+    Matrix result(1, AB.m_rowSize, 0);
     // Preparar la matriz, asumiendo que es diagonal dominante
-    for (int i = 0; i < A.m_colSize - 1; i++) {
+    for (int i = 0; i < AB.m_colSize - 1; i++) {
         // obtener Ai,i:
-        double div = A(i, i);
+        double div = AB(i, i);
         // dividir toda la fila entre div:
-        A.divRow(i, div);
+        AB.divRow(i, div);
     }
     int var = 0;
-    while (var < A.m_rowSize) {
-        for (int col = 0; col < A.m_colSize; col++) {
+    while (var < AB.m_rowSize) {
+        for (int col = 0; col < AB.m_colSize; col++) {
             if (col != var) {
-                if (col == A.m_colSize - 1) {
-                    result(0, var) = result(0, var) + A(var, col);
+                if (col == AB.m_colSize - 1) {
+                    result(0, var) = result(0, var) + AB(var, col);
                 } else {
-                    result(0, var) = result(0, var) - A(var, col) * result(0, col);
+                    result(0, var) = result(0, var) - AB(var, col) * result(0, col);
                 }
             }
         }
@@ -417,17 +381,17 @@ Matrix Matrix::gaussSeidelIter(Matrix &A) {
     return result;
 }
 
-Matrix Matrix::gaussSeidelIter(Matrix &A, Matrix &iterResult) {
-    Matrix result(1, A.m_rowSize, 0);
+Matrix Matrix::gaussSeidelIter(Matrix &AB, Matrix &iterResult) {
+    Matrix result(1, AB.m_rowSize, 0);
     int var = 0;
-    while (var < A.m_rowSize) {
-        for (int col = 0; col < A.m_colSize; col++) {
+    while (var < AB.m_rowSize) {
+        for (int col = 0; col < AB.m_colSize; col++) {
             if (col != var) {
-                if (col == A.m_colSize - 1) {
-                    result(0, var) = result(0, var) + A(var, col);
+                if (col == AB.m_colSize - 1) {
+                    result(0, var) = result(0, var) + AB(var, col);
                 } else {
                     double mult = result(0, col) == 0 ? iterResult(0, col) : result(0, col);
-                    result(0, var) = result(0, var) - A(var, col) * mult;
+                    result(0, var) = result(0, var) - AB(var, col) * mult;
                 }
             }
         }
@@ -436,7 +400,7 @@ Matrix Matrix::gaussSeidelIter(Matrix &A, Matrix &iterResult) {
     return result;
 }
 
-void Matrix::gaussSeidel(Matrix &A, unsigned int iterations) {
+void Matrix::solveGaussSeidel(Matrix &A, unsigned int iterations) {
     cout << "RESOLUCION DEL SISTEMA POR EL METODO DE GAUSS-SEIDEL" << endl;
     A.print();
     int i = 1;
@@ -469,6 +433,74 @@ void Matrix::Er(Matrix initialIter, Matrix newIter) {
         cout << " [" << Er << "]";
     }
     cout << endl;
+}
+
+void Matrix::factLU(Matrix &L, Matrix &U) {
+    Matrix A = getAfromAB();
+    U = A;
+    // La diagonal principal de la matriz L debe ser 1:
+    for (int i = 0; i < L.m_rowSize; i++) {
+        L(i, i) = 1;
+    }
+    for (int i = 0; i < m_colSize - 1; i++) {
+        double divisor = U(i, i);
+        for (int i_L = i + 1; i_L < L.m_rowSize; i_L++) {
+            double dividendo = U(i_L, i);
+            L(i_L, i) = dividendo / divisor;
+        }
+        U.zeroCol(i, i, i, true);
+    }
+    cout << "FACTORIZACION LU" << endl;
+    cout << "-----MATRIZ L-----" << endl;
+    L.print();
+    cout << "-----MATRIZ U-----" << endl;
+    U.print();
+}
+
+Matrix Matrix::getAfromAB() {
+    Matrix A(m_rowSize, m_colSize - 1, 0);
+    for (int i = 0; i < m_rowSize; i++) {
+        for (int j = 0; j < m_colSize - 1; j++) {
+            A(i, j) = m_matrix[i][j];
+        }
+    }
+    return A;
+}
+
+Matrix Matrix::getBfromAB() {
+    Matrix B(m_rowSize, 1, 0);
+    for (int i = 0; i < m_rowSize; i++) {
+        B(i, 0) = m_matrix[i][m_colSize - 1];
+    }
+    return B;
+}
+
+void Matrix::solveLU() {
+    Matrix B = getBfromAB();
+    Matrix U = Matrix(getRows(), getRows(), 0);
+    Matrix L = Matrix(getRows(), getRows(), 0);
+    factLU(L, U);
+// Eliminación hacia adelante:
+    cout << "Eliminacion hacia adelante" << endl;
+    for (int i = 1; i < B.m_rowSize; i++) {
+        for (int j = 0; j < i; j++) {
+            B(i, 0) = B(i, 0) - (L(i, j) * B(j, 0));
+        }
+    }
+    B.print();
+    // Eliminación hacia atras:
+    cout << "Eliminacion hacia atras" << endl;
+    B(B.m_rowSize - 1, 0) = B(B.m_rowSize - 1, 0) / U(U.m_rowSize - 1, U.m_colSize - 1);
+    for (int i = B.m_rowSize - 2; i >= 0; i--) {
+        for (int j = U.m_colSize - 1; j >= i; j--) {
+            if (j == i) {
+                B(i, 0) = B(i, 0) / U(i, j);
+            } else {
+                B(i, 0) = B(i, 0) - (U(i, j) * B(j, 0));
+            }
+        }
+    }
+    B.print();
 }
 
 

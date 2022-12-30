@@ -3,8 +3,13 @@
 
 int main() {
     Matrix A = Matrix("matrix.txt");
-    A.gaussSeidel(A, 10);
-
+    A.solveGaussSeidel(A, 100);
+    Matrix B = Matrix("matrix.txt");
+    B.gaussElim();
+    B.print();
+// Ejemplo descomposición LU
+    Matrix AB = Matrix("matrix.txt");
+    AB.solveLU();
 
     return 0;
 }

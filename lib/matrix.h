@@ -83,19 +83,25 @@ public:
 
     void sort(unsigned int row, unsigned int col);
 
-    Matrix getMatrixU(Matrix &A);
+    Matrix gaussSeidelIter(Matrix &AB);
 
-    Matrix getMatrixL(Matrix &A, Matrix &U);
+    Matrix gaussSeidelIter(Matrix &AB, Matrix &iterResult);
 
-    Matrix gaussSeidelIter(Matrix &A);
-
-    Matrix gaussSeidelIter(Matrix &A, Matrix &iterResult);
-
-    void gaussSeidel(Matrix &A, unsigned int iterations);
+    void solveGaussSeidel(Matrix &A, unsigned int iterations);
 
     void Er(Matrix initialIter, Matrix newIter);
 
+    void factLU(Matrix &L, Matrix &U);
 
+    Matrix getAfromAB();
+
+    Matrix getBfromAB();
+
+    void solveLU();
+
+    Matrix jacobiIter(Matrix &AB);
+
+    Matrix jacobiIter(Matrix &AB, Matrix &iterResult);
 };
 
 #endif /* defined(__EE_242_Project_2__matrix__) */
