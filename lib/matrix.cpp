@@ -355,24 +355,24 @@ void Matrix::sort(unsigned int row, unsigned int col) {
     }
 }
 
-Matrix Matrix::gaussSeidelIter(Matrix &AB) {
+Matrix Matrix::gaussSeidelIter() {
     // Inicializar una matriz con la iteración inicial de resultados.
-    Matrix result(1, AB.m_rowSize, 0);
+    Matrix result(1, m_rowSize, 0);
     // Preparar la matriz, asumiendo que es diagonal dominante
-    for (int i = 0; i < AB.m_colSize - 1; i++) {
+    for (int i = 0; i < m_colSize - 1; i++) {
         // obtener Ai,i:
-        double div = AB(i, i);
+        double div = m_matrix[i][i];
         // dividir toda la fila entre div:
-        AB.divRow(i, div);
+        divRow(i, div);
     }
     int var = 0;
-    while (var < AB.m_rowSize) {
-        for (int col = 0; col < AB.m_colSize; col++) {
+    while (var < m_rowSize) {
+        for (int col = 0; col < m_colSize; col++) {
             if (col != var) {
-                if (col == AB.m_colSize - 1) {
-                    result(0, var) = result(0, var) + AB(var, col);
+                if (col == m_colSize - 1) {
+                    result(0, var) = result(0, var) + m_matrix[var][col];
                 } else {
-                    result(0, var) = result(0, var) - AB(var, col) * result(0, col);
+                    result(0, var) = result(0, var) - m_matrix[var][col] * result(0, col);
                 }
             }
         }
@@ -381,17 +381,17 @@ Matrix Matrix::gaussSeidelIter(Matrix &AB) {
     return result;
 }
 
-Matrix Matrix::gaussSeidelIter(Matrix &AB, Matrix &iterResult) {
-    Matrix result(1, AB.m_rowSize, 0);
+Matrix Matrix::gaussSeidelIter(Matrix &iterResult) {
+    Matrix result(1, m_rowSize, 0);
     int var = 0;
-    while (var < AB.m_rowSize) {
-        for (int col = 0; col < AB.m_colSize; col++) {
+    while (var < m_rowSize) {
+        for (int col = 0; col < m_colSize; col++) {
             if (col != var) {
-                if (col == AB.m_colSize - 1) {
-                    result(0, var) = result(0, var) + AB(var, col);
+                if (col == m_colSize - 1) {
+                    result(0, var) = result(0, var) + m_matrix[var][col];
                 } else {
                     double mult = result(0, col) == 0 ? iterResult(0, col) : result(0, col);
-                    result(0, var) = result(0, var) - AB(var, col) * mult;
+                    result(0, var) = result(0, var) - m_matrix[var][col] * mult;
                 }
             }
         }
@@ -400,17 +400,17 @@ Matrix Matrix::gaussSeidelIter(Matrix &AB, Matrix &iterResult) {
     return result;
 }
 
-void Matrix::solveGaussSeidel(Matrix &A, unsigned int iterations) {
+void Matrix::solveGaussSeidel(unsigned int iterations) {
     cout << "RESOLUCION DEL SISTEMA POR EL METODO DE GAUSS-SEIDEL" << endl;
-    A.print();
+    print();
     int i = 1;
     cout << "Iter " << i << endl;
-    Matrix previousIter = gaussSeidelIter(A);
+    Matrix previousIter = gaussSeidelIter();
     previousIter.print();
     i++;
     while (i <= iterations) {
         cout << "Iter " << i << endl;
-        Matrix newIter = gaussSeidelIter(A, previousIter);
+        Matrix newIter = gaussSeidelIter(previousIter);
         newIter.print();
         Er(previousIter, newIter);
         previousIter = newIter;
@@ -442,13 +442,19 @@ void Matrix::factLU(Matrix &L, Matrix &U) {
     for (int i = 0; i < L.m_rowSize; i++) {
         L(i, i) = 1;
     }
+    cout << "La diagonal principal de la matriz L debe ser 1:" << endl;
+    L.print();
     for (int i = 0; i < m_colSize - 1; i++) {
         double divisor = U(i, i);
         for (int i_L = i + 1; i_L < L.m_rowSize; i_L++) {
             double dividendo = U(i_L, i);
             L(i_L, i) = dividendo / divisor;
+            cout << "---------------------------------------" << endl;
+            L.print();
         }
         U.zeroCol(i, i, i, true);
+        cout << "---------------------------------------" << endl;
+        U.print();
     }
     cout << "FACTORIZACION LU" << endl;
     cout << "-----MATRIZ L-----" << endl;
@@ -501,6 +507,69 @@ void Matrix::solveLU() {
         }
     }
     B.print();
+}
+
+Matrix Matrix::jacobiIter() {
+    // Inicializar una matriz con la iteración inicial de resultados.
+    Matrix seed(1, m_rowSize, 0);
+    Matrix result(1, m_rowSize, 0);
+    // Preparar la matriz, asumiendo que es diagonal dominante
+    for (int i = 0; i < m_colSize - 1; i++) {
+        // obtener Ai,i:
+        double div = m_matrix[i][i];
+        // dividir toda la fila entre div:
+        divRow(i, div);
+    }
+    int var = 0;
+    while (var < m_rowSize) {
+        for (int col = 0; col < m_colSize; col++) {
+            if (col != var) {
+                if (col == m_colSize - 1) {
+                    result(0, var) = result(0, var) + m_matrix[var][col];
+                } else {
+                    result(0, var) = result(0, var) - m_matrix[var][col] * seed(0, col);
+                }
+            }
+        }
+        var++;
+    }
+    return result;
+}
+
+Matrix Matrix::jacobiIter(Matrix &iterResult) {
+    Matrix result(1, m_rowSize, 0);
+    int var = 0;
+    while (var < m_rowSize) {
+        for (int col = 0; col < m_colSize; col++) {
+            if (col != var) {
+                if (col == m_colSize - 1) {
+                    result(0, var) = result(0, var) + m_matrix[var][col];
+                } else {
+                    result(0, var) = result(0, var) - m_matrix[var][col] * iterResult(0, col);
+                }
+            }
+        }
+        var++;
+    }
+    return result;
+}
+
+void Matrix::solveJacobi(unsigned int iterations) {
+    cout << "RESOLUCION DEL SISTEMA POR EL METODO DE JACOBI" << endl;
+    print();
+    int i = 1;
+    cout << "Iter " << i << endl;
+    Matrix previousIter = jacobiIter();
+    previousIter.print();
+    i++;
+    while (i <= iterations) {
+        cout << "Iter " << i << endl;
+        Matrix newIter = jacobiIter(previousIter);
+        newIter.print();
+        Er(previousIter, newIter);
+        previousIter = newIter;
+        i++;
+    }
 }
 
 

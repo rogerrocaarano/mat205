@@ -2,12 +2,13 @@
 #include "lib/matrix.h"
 
 int main() {
-    Matrix A = Matrix("matrix.txt");
-    A.solveGaussSeidel(A, 100);
-    Matrix B = Matrix("matrix.txt");
-    B.gaussElim();
-    B.print();
+//    Matrix gs = Matrix("matrix.txt");
+//    gs.solveGaussSeidel(4);
+//    Matrix jb = Matrix("matrix.txt");
+//    jb.solveJacobi(4);
 // Ejemplo descomposición LU
+//    Matrix AB = Matrix("matrix.txt");
+//    AB.solveLU();
     Matrix AB = Matrix("matrix.txt");
     AB.solveLU();
 

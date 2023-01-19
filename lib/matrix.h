@@ -83,11 +83,11 @@ public:
 
     void sort(unsigned int row, unsigned int col);
 
-    Matrix gaussSeidelIter(Matrix &AB);
+    Matrix gaussSeidelIter();
 
-    Matrix gaussSeidelIter(Matrix &AB, Matrix &iterResult);
+    Matrix gaussSeidelIter(Matrix &iterResult);
 
-    void solveGaussSeidel(Matrix &A, unsigned int iterations);
+    void solveGaussSeidel(unsigned int iterations);
 
     void Er(Matrix initialIter, Matrix newIter);
 
@@ -99,9 +99,11 @@ public:
 
     void solveLU();
 
-    Matrix jacobiIter(Matrix &AB);
+    Matrix jacobiIter();
 
-    Matrix jacobiIter(Matrix &AB, Matrix &iterResult);
+    Matrix jacobiIter(Matrix &iterResult);
+
+    void solveJacobi(unsigned int iterations);
 };
 
 #endif /* defined(__EE_242_Project_2__matrix__) */
